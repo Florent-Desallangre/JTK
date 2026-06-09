@@ -1,17 +1,20 @@
-import express from 'express';
-import { JTK_VERSION } from '@jtk/shared-types';
+import { createApp } from './app';
+import { PrismaService } from '@jtk/database';
 
-const host = process.env.HOST ?? 'localhost';
-const port = process.env.API_PORT ? Number(process.env.API_PORT) : 3001;
+const host = process.env['HOST'] ?? 'localhost';
+const port = process.env['API_PORT'] ? Number(process.env['API_PORT']) : 3001;
 
-const app = express();
+async function bootstrap() {
+    const prisma = new PrismaService();
+    await prisma.connect();
 
-app.use(express.json());
+    const app = createApp();
+    app.listen(port, host, () => {
+        console.log(`[ ready ] http://${host}:${port}`);
+    });
+}
 
-app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', version: JTK_VERSION });
-});
-
-app.listen(port, host, () => {
-    console.log(`[ ready ] http://${host}:${port}`);
+bootstrap().catch((error) => {
+    console.error(error);
+    process.exit(1);
 });
