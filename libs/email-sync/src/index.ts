@@ -1,1 +1,1 @@
-export * from './lib/email-sync';
+export * from './lib/gmail-sync.service';
