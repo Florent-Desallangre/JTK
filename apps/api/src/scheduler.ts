@@ -12,6 +12,11 @@ export function startScheduler(): void {
         }
     });
 
+    cron.schedule('0 9 * * *', async () => {
+        console.log('[scheduler] checkFollowups tick');
+        await container.followupService.checkAndSchedule();
+    });
+
     cron.schedule('* * * * *', async () => {
         const count = await processEvents();
         if (count > 0) console.log(`[scheduler] processed ${count} events`);

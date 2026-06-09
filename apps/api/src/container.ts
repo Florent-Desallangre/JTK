@@ -13,6 +13,7 @@ import { EmailPipelineService, EmailPersistenceService, EmailRepository, GmailSy
 import { EmailAccountRepository, GmailProvider, getGmailConfig } from '@jtk/email-providers';
 import { EventBusService, EventRepository } from '@jtk/events';
 import { NotificationHandler, TelegramService, getTelegramConfig } from '@jtk/notifications';
+import { FollowupRepository, FollowupService } from '@jtk/followup';
 
 const prismaService = new PrismaService();
 const authRepository = new AuthRepository(prismaService.db);
@@ -50,6 +51,13 @@ export const container = {
         new ApplicationMatcherService(prismaService.db),
         classificationService,
         applicationStateService,
+        eventBus,
+    ),
+    followupService: new FollowupService(
+        prismaService.db,
+        new FollowupRepository(prismaService.db),
+        new OllamaClient(getOllamaConfig()),
+        gmailProvider,
         eventBus,
     ),
 };
