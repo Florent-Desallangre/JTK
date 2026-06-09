@@ -1,0 +1,19 @@
+{
+  "name": "classification",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/classification/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/classification",
+        "main": "libs/classification/src/index.ts",
+        "tsConfig": "libs/classification/tsconfig.lib.json",
+        "assets": ["libs/classification/*.md"]
+      }
+    }
+  }
+}
