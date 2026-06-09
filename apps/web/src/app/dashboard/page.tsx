@@ -14,6 +14,7 @@ import {
     listApplications,
 } from '../../lib/applications';
 import { FollowupSuggestion, approveFollowup, listFollowupSuggestions } from '../../lib/followups';
+import { DashboardStats, getStats } from '../../lib/stats';
 
 const ALL_STATUSES: ApplicationStatus[] = ['applied', 'interview', 'offer', 'rejected', 'archived'];
 
@@ -29,17 +30,20 @@ export default function DashboardPage() {
     const [company, setCompany] = useState('');
     const [userEmail, setUserEmail] = useState('');
     const [followups, setFollowups] = useState<FollowupSuggestion[]>([]);
+    const [stats, setStats] = useState<DashboardStats | null>(null);
 
     const load = useCallback(async () => {
         try {
-            const [apps, user, suggestions] = await Promise.all([
+            const [apps, user, suggestions, dashboardStats] = await Promise.all([
                 listApplications(),
                 getMe(),
                 listFollowupSuggestions().catch(() => []),
+                getStats().catch(() => null),
             ]);
             setApplications(apps);
             setUserEmail(user.email);
             setFollowups(suggestions);
+            setStats(dashboardStats);
         } catch {
             router.push('/login');
         } finally {
@@ -141,6 +145,27 @@ export default function DashboardPage() {
                 </div>
 
                 {error && <p className="mb-4 text-red-600">{error}</p>}
+
+                {stats && (
+                    <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+                        <div className="rounded-lg bg-white p-4 shadow">
+                            <p className="text-sm text-slate-500">Total</p>
+                            <p className="text-2xl font-bold">{stats.total}</p>
+                        </div>
+                        <div className="rounded-lg bg-white p-4 shadow">
+                            <p className="text-sm text-slate-500">Taux de réponse</p>
+                            <p className="text-2xl font-bold">{stats.responseRate}%</p>
+                        </div>
+                        <div className="rounded-lg bg-white p-4 shadow">
+                            <p className="text-sm text-slate-500">Entretiens</p>
+                            <p className="text-2xl font-bold">{stats.byStatus['interview'] ?? 0}</p>
+                        </div>
+                        <div className="rounded-lg bg-white p-4 shadow">
+                            <p className="text-sm text-slate-500">Relances en attente</p>
+                            <p className="text-2xl font-bold">{stats.pendingFollowups}</p>
+                        </div>
+                    </div>
+                )}
 
                 {showForm && (
                     <form onSubmit={handleCreate} className="mb-6 rounded-lg bg-white p-4 shadow">
