@@ -70,6 +70,15 @@ applicationsRouter.put('/:id', async (req: AuthenticatedRequest, res: Response) 
     }
 });
 
+applicationsRouter.get('/:id/timeline', async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const timeline = await container.timelineService.getTimeline(req.user!.userId, req.params['id']!);
+        res.json(timeline);
+    } catch {
+        res.status(404).json({ error: 'NOT_FOUND' });
+    }
+});
+
 applicationsRouter.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
     try {
         await container.applicationService.delete(req.user!.userId, req.params['id']!);

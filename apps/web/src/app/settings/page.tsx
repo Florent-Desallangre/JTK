@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch, getAuthToken } from '../../lib/api';
@@ -12,7 +12,7 @@ interface EmailAccountDto {
     lastSyncAt: string | null;
 }
 
-export default function SettingsPage() {
+function SettingsContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [accounts, setAccounts] = useState<EmailAccountDto[]>([]);
@@ -35,40 +35,48 @@ export default function SettingsPage() {
     }
 
     return (
-        <main className="min-h-screen bg-slate-50 p-6">
-            <div className="mx-auto max-w-3xl">
-                <Link href="/dashboard" className="text-blue-600 hover:underline">
-                    ← Retour au dashboard
-                </Link>
-                <h1 className="mt-4 text-2xl font-bold">Paramètres</h1>
-                {message && <p className="mt-2 text-green-600">{message}</p>}
+        <div className="mx-auto max-w-3xl">
+            <Link href="/dashboard" className="text-blue-600 hover:underline">
+                ← Retour au dashboard
+            </Link>
+            <h1 className="mt-4 text-2xl font-bold">Paramètres</h1>
+            {message && <p className="mt-2 text-green-600">{message}</p>}
 
-                <section className="mt-6 rounded-lg bg-white p-6 shadow">
-                    <h2 className="mb-4 text-lg font-semibold">Comptes email</h2>
-                    {accounts.length === 0 ? (
-                        <p className="mb-4 text-slate-600">Aucun compte connecté</p>
-                    ) : (
-                        <ul className="mb-4 space-y-2">
-                            {accounts.map((a) => (
-                                <li key={a.id} className="text-sm">
-                                    {a.provider} — {a.email}
-                                    {a.lastSyncAt && (
-                                        <span className="ml-2 text-slate-400">
-                                            (sync: {new Date(a.lastSyncAt).toLocaleString('fr-FR')})
-                                        </span>
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                    <button
-                        onClick={connectGmail}
-                        className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-                    >
-                        Connecter Gmail
-                    </button>
-                </section>
-            </div>
+            <section className="mt-6 rounded-lg bg-white p-6 shadow">
+                <h2 className="mb-4 text-lg font-semibold">Comptes email</h2>
+                {accounts.length === 0 ? (
+                    <p className="mb-4 text-slate-600">Aucun compte connecté</p>
+                ) : (
+                    <ul className="mb-4 space-y-2">
+                        {accounts.map((a) => (
+                            <li key={a.id} className="text-sm">
+                                {a.provider} — {a.email}
+                                {a.lastSyncAt && (
+                                    <span className="ml-2 text-slate-400">
+                                        (sync: {new Date(a.lastSyncAt).toLocaleString('fr-FR')})
+                                    </span>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+                <button
+                    onClick={connectGmail}
+                    className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                >
+                    Connecter Gmail
+                </button>
+            </section>
+        </div>
+    );
+}
+
+export default function SettingsPage() {
+    return (
+        <main className="min-h-screen bg-slate-50 p-6">
+            <Suspense fallback={<p>Chargement...</p>}>
+                <SettingsContent />
+            </Suspense>
         </main>
     );
 }
