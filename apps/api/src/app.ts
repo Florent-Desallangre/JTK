@@ -3,6 +3,7 @@ import cors from 'cors';
 import { JTK_VERSION } from '@jtk/shared-types';
 import { authRouter } from './routes/auth.routes';
 import { applicationsRouter } from './routes/applications.routes';
+import { emailAccountsRouter, gmailOAuthRouter } from './routes/email-accounts.routes';
 
 export function createApp() {
     const app = express();
@@ -21,6 +22,8 @@ export function createApp() {
 
     app.use('/auth', authRouter);
     app.use('/applications', applicationsRouter);
+    app.use('/email-accounts', emailAccountsRouter);
+    app.use('/oauth/gmail', gmailOAuthRouter);
 
     return app;
 }

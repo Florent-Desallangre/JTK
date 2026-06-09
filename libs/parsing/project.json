@@ -1,0 +1,19 @@
+{
+  "name": "parsing",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/parsing/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/parsing",
+        "main": "libs/parsing/src/index.ts",
+        "tsConfig": "libs/parsing/tsconfig.lib.json",
+        "assets": ["libs/parsing/*.md"]
+      }
+    }
+  }
+}

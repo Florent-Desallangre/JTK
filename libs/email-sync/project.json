@@ -1,0 +1,19 @@
+{
+  "name": "email-sync",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/email-sync/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/email-sync",
+        "main": "libs/email-sync/src/index.ts",
+        "tsConfig": "libs/email-sync/tsconfig.lib.json",
+        "assets": ["libs/email-sync/*.md"]
+      }
+    }
+  }
+}

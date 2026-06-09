@@ -20,7 +20,10 @@
       "@jtk/database": ["./libs/database/src/index.ts"],
       "@jtk/events": ["./libs/events/src/index.ts"],
       "@jtk/auth": ["./libs/auth/src/index.ts"],
-      "@jtk/applications": ["./libs/applications/src/index.ts"]
+      "@jtk/applications": ["./libs/applications/src/index.ts"],
+      "@jtk/email-providers": ["./libs/email-providers/src/index.ts"],
+      "@jtk/email-sync": ["./libs/email-sync/src/index.ts"],
+      "@jtk/parsing": ["./libs/parsing/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
