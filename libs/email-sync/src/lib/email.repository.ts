@@ -41,4 +41,11 @@ export class EmailRepository {
             orderBy: { receivedAt: 'desc' },
         });
     }
+
+    updateParsedData(emailId: string, parsedData: object): Promise<Email> {
+        return this.prisma.email.update({
+            where: { id: emailId },
+            data: { parsedData },
+        });
+    }
 }

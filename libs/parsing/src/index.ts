@@ -1,1 +1,2 @@
-export * from './lib/parsing';
+export * from './lib/parsing.types';
+export * from './lib/parsing.service';
