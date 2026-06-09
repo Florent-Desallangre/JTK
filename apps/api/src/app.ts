@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { JTK_VERSION } from '@jtk/shared-types';
 import { authRouter } from './routes/auth.routes';
+import { applicationsRouter } from './routes/applications.routes';
 
 export function createApp() {
     const app = express();
@@ -19,6 +20,7 @@ export function createApp() {
     });
 
     app.use('/auth', authRouter);
+    app.use('/applications', applicationsRouter);
 
     return app;
 }
