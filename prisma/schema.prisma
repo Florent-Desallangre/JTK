@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ApplicationStatus {
+  applied
+  interview
+  offer
+  rejected
+  archived
+}
+
+enum EmailProvider {
+  gmail
+  outlook
+}
+
+enum FollowupMode {
+  manual
+  assisted
+  automatic
+}
+
+enum EventType {
+  email_received
+  application_created
+  application_updated
+  classification_completed
+  followup_due
+  followup_sent
+  notification_sent
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  passwordHash  String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  emailAccounts EmailAccount[]
+  applications  Application[]
+  emails        Email[]
+  events        Event[]
+  settings      UserSettings?
+}
+
+model EmailAccount {
+  id           String        @id @default(cuid())
+  userId       String
+  provider     EmailProvider
+  email        String
+  accessToken  String
+  refreshToken String
+  tokenExpiry  DateTime?
+  lastSyncAt   DateTime?
+  syncCursor   String?
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emails       Email[]
+
+  @@unique([userId, provider, email])
+}
+
+model Application {
+  id          String            @id @default(cuid())
+  userId      String
+  title       String
+  company     String?
+  status      ApplicationStatus @default(applied)
+  source      String?
+  appliedAt   DateTime?
+  lastEmailAt DateTime?
+  metadata    Json?
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emails      Email[]
+}
+
+model Email {
+  id             String       @id @default(cuid())
+  userId         String
+  emailAccountId String
+  applicationId  String?
+  externalId     String
+  threadId       String?
+  subject        String
+  fromAddress    String
+  toAddresses    String[]
+  bodyText       String?
+  bodyHtml       String?
+  receivedAt     DateTime
+  parsedData     Json?
+  classification Json?
+  isOutbound     Boolean      @default(false)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailAccount   EmailAccount @relation(fields: [emailAccountId], references: [id], onDelete: Cascade)
+  application    Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
+  @@unique([emailAccountId, externalId])
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  userId      String
+  type        EventType
+  payload     Json
+  processed   Boolean   @default(false)
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([processed, createdAt])
+}
+
+model UserSettings {
+  id                String       @id @default(cuid())
+  userId            String       @unique
+  followupMode      FollowupMode @default(manual)
+  followupDelayDays Int          @default(7)
+  telegramChatId    String?
+  telegramEnabled   Boolean      @default(false)
+  notificationPrefs Json         @default("{}")
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

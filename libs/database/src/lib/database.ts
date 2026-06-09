@@ -1,10 +1,32 @@
-/** Database module stub — Prisma client wired in commit 2. */
+import { PrismaClient } from '@prisma/client';
+
+let prisma: PrismaClient | undefined;
+
+export function getPrismaClient(): PrismaClient {
+    if (!prisma) {
+        prisma = new PrismaClient();
+    }
+    return prisma;
+}
+
 export class PrismaService {
+    private client: PrismaClient;
+
+    constructor(client?: PrismaClient) {
+        this.client = client ?? getPrismaClient();
+    }
+
+    get db(): PrismaClient {
+        return this.client;
+    }
+
     async connect(): Promise<void> {
-        // Implemented in commit 2
+        await this.client.$connect();
     }
 
     async disconnect(): Promise<void> {
-        // Implemented in commit 2
+        await this.client.$disconnect();
     }
 }
+
+export { PrismaClient };

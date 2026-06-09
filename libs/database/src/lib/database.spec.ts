@@ -1,8 +1,8 @@
 import { PrismaService } from './database';
 
-describe('PrismaService stub', () => {
+describe('PrismaService', () => {
     it('can be instantiated', () => {
         const service = new PrismaService();
-        expect(service).toBeDefined();
+        expect(service.db).toBeDefined();
     });
 });

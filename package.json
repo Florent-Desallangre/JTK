@@ -7,9 +7,17 @@
     "serve:web": "nx serve web",
     "build": "nx run-many -t build",
     "test": "nx run-many -t test",
-    "lint": "nx run-many -t lint"
+    "lint": "nx run-many -t lint",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:seed": "ts-node prisma/seed.ts"
   },
   "private": true,
+  "pnpm": {
+    "onlyBuiltDependencies": ["@prisma/client", "@prisma/engines", "prisma"]
+  },
   "devDependencies": {
     "@eslint/js": "^9.8.0",
     "@nx/esbuild": "22.7.5",
@@ -44,6 +52,7 @@
     "nx": "22.7.5",
     "postcss": "8.4.38",
     "prettier": "~3.6.2",
+    "prisma": "^6.19.3",
     "tailwindcss": "3.4.3",
     "ts-jest": "^29.4.0",
     "ts-node": "10.9.1",
@@ -52,6 +61,7 @@
     "typescript-eslint": "^8.40.0"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
     "express": "^4.21.2",
     "next": "~16.1.6",
     "react": "^19.0.0",
