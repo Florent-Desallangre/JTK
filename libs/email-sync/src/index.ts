@@ -1,3 +1,4 @@
+export * from './lib/email-sync.service';
 export * from './lib/gmail-sync.service';
 export * from './lib/email.repository';
 export * from './lib/email-persistence.service';

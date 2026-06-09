@@ -20,6 +20,11 @@ enum EmailProvider {
   outlook
 }
 
+enum EmailConnectionType {
+  oauth
+  imap
+}
+
 enum FollowupMode {
   manual
   assisted
@@ -50,15 +55,20 @@ model User {
 }
 
 model EmailAccount {
-  id           String        @id @default(cuid())
-  userId       String
-  provider     EmailProvider
-  email        String
-  accessToken  String
-  refreshToken String
-  tokenExpiry  DateTime?
-  lastSyncAt   DateTime?
-  syncCursor   String?
+  id             String              @id @default(cuid())
+  userId         String
+  provider       EmailProvider
+  connectionType EmailConnectionType @default(oauth)
+  email          String
+  accessToken    String
+  refreshToken   String
+  tokenExpiry    DateTime?
+  imapHost       String?
+  imapPort       Int?
+  smtpHost       String?
+  smtpPort       Int?
+  lastSyncAt     DateTime?
+  syncCursor     String?
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   emails       Email[]
 

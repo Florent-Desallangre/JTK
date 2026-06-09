@@ -5,7 +5,7 @@ import { processEvents } from './event-processor';
 export function startScheduler(): void {
     cron.schedule('*/5 * * * *', async () => {
         console.log('[scheduler] syncEmails tick');
-        const accounts = await container.emailAccountRepository.findAllGmailAccounts();
+        const accounts = await container.emailAccountRepository.findAllAccounts();
         if (accounts.length === 0) return;
         for (const account of accounts) {
             await container.emailPipelineService.processAccount(account);

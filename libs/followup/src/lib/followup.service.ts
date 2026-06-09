@@ -1,8 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-import { decryptToken } from '@jtk/shared-types';
 import { OllamaClient } from '@jtk/classification';
 import { EventBusService } from '@jtk/events';
-import { GmailProvider } from '@jtk/email-providers';
+import { EmailSenderService } from '@jtk/email-providers';
 import { FollowupRepository } from './followup.repository';
 import { FollowupSuggestion } from './followup.types';
 
@@ -11,7 +10,7 @@ export class FollowupService {
         private readonly prisma: PrismaClient,
         private readonly repository: FollowupRepository,
         private readonly ollamaClient: OllamaClient,
-        private readonly gmailProvider: GmailProvider,
+        private readonly emailSender: EmailSenderService,
         private readonly eventBus: EventBusService,
     ) {}
 
@@ -86,10 +85,10 @@ export class FollowupService {
         const suggestion = events.find((s) => s.id === id);
         if (!suggestion) throw new Error('NOT_FOUND');
 
-        const account = await this.prisma.emailAccount.findFirst({ where: { userId, provider: 'gmail' } });
+        const account = await this.prisma.emailAccount.findFirst({ where: { userId } });
         if (!account) throw new Error('NO_EMAIL_ACCOUNT');
 
-        await this.gmailProvider.sendEmail(decryptToken(account.accessToken), {
+        await this.emailSender.send(account, {
             to: '',
             subject: suggestion.subject,
             body: suggestion.body,

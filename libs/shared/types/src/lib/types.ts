@@ -4,6 +4,8 @@ export type ApplicationStatus = 'applied' | 'interview' | 'offer' | 'rejected' |
 
 export type EmailProviderType = 'gmail' | 'outlook';
 
+export type EmailConnectionType = 'oauth' | 'imap';
+
 export type FollowupMode = 'manual' | 'assisted' | 'automatic';
 
 export type EventType =

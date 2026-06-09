@@ -3,3 +3,7 @@ export * from './lib/gmail.config';
 export * from './lib/gmail.provider';
 export * from './lib/email-account.repository';
 export * from './lib/outlook.provider';
+export * from './lib/imap.presets';
+export * from './lib/imap.provider';
+export * from './lib/smtp.sender';
+export * from './lib/email-sender.service';

@@ -1,5 +1,5 @@
 import { EmailAccount, PrismaClient } from '@prisma/client';
-import { GmailSyncService } from './gmail-sync.service';
+import { EmailSyncService } from './email-sync.service';
 import { EmailRepository } from './email.repository';
 
 export interface PersistResult {
@@ -10,7 +10,7 @@ export interface PersistResult {
 
 export class EmailPersistenceService {
     constructor(
-        private readonly syncService: GmailSyncService,
+        private readonly syncService: EmailSyncService,
         private readonly emailRepository: EmailRepository,
         private readonly prisma: PrismaClient,
     ) {}

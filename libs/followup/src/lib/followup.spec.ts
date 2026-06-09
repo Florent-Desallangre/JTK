@@ -12,10 +12,10 @@ describe('FollowupService', () => {
 
     const mockRepo = { createSuggestion: jest.fn(), findPendingByUser: jest.fn(), updateStatus: jest.fn() } as unknown as FollowupRepository;
     const mockOllama = { generateFollowupEmail: jest.fn() } as unknown as import('@jtk/classification').OllamaClient;
-    const mockGmail = { sendEmail: jest.fn() } as unknown as import('@jtk/email-providers').GmailProvider;
+    const mockEmailSender = { send: jest.fn() } as unknown as import('@jtk/email-providers').EmailSenderService;
     const mockEventBus = { emit: jest.fn() } as unknown as import('@jtk/events').EventBusService;
 
-    const service = new FollowupService(mockPrisma, mockRepo, mockOllama, mockGmail, mockEventBus);
+    const service = new FollowupService(mockPrisma, mockRepo, mockOllama, mockEmailSender, mockEventBus);
 
     it('finds due applications', async () => {
         (mockPrisma.userSettings.findMany as jest.Mock).mockResolvedValue([{ userId: 'u1', followupDelayDays: 7 }]);
@@ -37,7 +37,7 @@ describe('FollowupService', () => {
         (mockRepo.findPendingByUser as jest.Mock).mockResolvedValue([{ id: 'f1', subject: 'Relance', body: 'Bonjour' }]);
 
         await service.checkAndSchedule();
-        expect(mockGmail.sendEmail).toHaveBeenCalled();
+        expect(mockEmailSender.send).toHaveBeenCalled();
     });
 
     it('generates followup suggestion via ollama', async () => {

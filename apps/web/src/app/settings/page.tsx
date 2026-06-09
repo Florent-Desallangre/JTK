@@ -3,15 +3,151 @@
 import { FormEvent, Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FollowupMode } from '@jtk/shared-types';
+import { EmailConnectionType, EmailProviderType, FollowupMode } from '@jtk/shared-types';
 import { apiFetch, getAuthToken } from '../../lib/api';
 import { getSettings, updateSettings } from '../../lib/settings';
 
 interface EmailAccountDto {
     id: string;
-    provider: string;
+    provider: EmailProviderType;
+    connectionType: EmailConnectionType;
     email: string;
     lastSyncAt: string | null;
+}
+
+type ConnectionMethod = EmailConnectionType;
+
+function EmailProviderSection({
+    provider,
+    label,
+    oauthLabel,
+    imapHint,
+    accounts,
+    onConnected,
+}: {
+    provider: EmailProviderType;
+    label: string;
+    oauthLabel: string;
+    imapHint: string;
+    accounts: EmailAccountDto[];
+    onConnected: (message: string) => void;
+}) {
+    const [method, setMethod] = useState<ConnectionMethod>('oauth');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const providerAccounts = accounts.filter((account) => account.provider === provider);
+
+    async function connectOAuth() {
+        setError('');
+        try {
+            const { url } = await apiFetch<{ url: string }>(`/email-accounts/${provider}/connect`);
+            window.location.href = url;
+        } catch {
+            setError(`Impossible de démarrer la connexion ${label}.`);
+        }
+    }
+
+    async function connectImap(e: FormEvent) {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+        try {
+            await apiFetch('/email-accounts/imap', {
+                method: 'POST',
+                body: JSON.stringify({ provider, email, password }),
+            });
+            setEmail('');
+            setPassword('');
+            onConnected(`${label} connecté via IMAP !`);
+        } catch {
+            setError('Connexion IMAP échouée. Vérifiez votre email et votre mot de passe d\'application.');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    return (
+        <div className="rounded-lg border border-slate-200 p-4">
+            <h3 className="font-medium">{label}</h3>
+
+            {providerAccounts.length > 0 ? (
+                <ul className="mt-2 space-y-1 text-sm text-slate-700">
+                    {providerAccounts.map((account) => (
+                        <li key={account.id}>
+                            {account.email} — {account.connectionType === 'oauth' ? 'OAuth' : 'IMAP'}
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p className="mt-2 text-sm text-slate-500">Aucun compte {label} connecté</p>
+            )}
+
+            <div className="mt-4 flex gap-4 text-sm">
+                <label className="flex items-center gap-2">
+                    <input
+                        type="radio"
+                        name={`${provider}-method`}
+                        checked={method === 'oauth'}
+                        onChange={() => setMethod('oauth')}
+                    />
+                    OAuth
+                </label>
+                <label className="flex items-center gap-2">
+                    <input
+                        type="radio"
+                        name={`${provider}-method`}
+                        checked={method === 'imap'}
+                        onChange={() => setMethod('imap')}
+                    />
+                    IMAP
+                </label>
+            </div>
+
+            {method === 'oauth' ? (
+                <div className="mt-4">
+                    <button
+                        type="button"
+                        onClick={connectOAuth}
+                        className="rounded bg-slate-800 px-4 py-2 text-sm text-white hover:bg-slate-900"
+                    >
+                        {oauthLabel}
+                    </button>
+                </div>
+            ) : (
+                <form onSubmit={connectImap} className="mt-4 space-y-3">
+                    <p className="text-xs text-slate-500">{imapHint}</p>
+                    <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="email@exemple.com"
+                        className="w-full rounded border px-3 py-2 text-sm"
+                    />
+                    <input
+                        type="password"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Mot de passe d'application"
+                        className="w-full rounded border px-3 py-2 text-sm"
+                    />
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                        {loading ? 'Connexion...' : `Connecter ${label} via IMAP`}
+                    </button>
+                </form>
+            )}
+
+            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+        </div>
+    );
 }
 
 function SettingsContent() {
@@ -24,15 +160,20 @@ function SettingsContent() {
     const [telegramChatId, setTelegramChatId] = useState('');
     const [telegramEnabled, setTelegramEnabled] = useState(false);
 
+    async function loadAccounts() {
+        const accs = await apiFetch<EmailAccountDto[]>('/email-accounts');
+        setAccounts(accs);
+    }
+
     useEffect(() => {
         if (!getAuthToken()) {
             router.push('/login');
             return;
         }
         if (searchParams.get('gmail') === 'connected') setMessage('Gmail connecté avec succès !');
-        Promise.all([apiFetch<EmailAccountDto[]>('/email-accounts'), getSettings()])
-            .then(([accs, settings]) => {
-                setAccounts(accs);
+        if (searchParams.get('outlook') === 'connected') setMessage('Outlook connecté avec succès !');
+        Promise.all([loadAccounts(), getSettings()])
+            .then(([, settings]) => {
                 setFollowupMode(settings.followupMode);
                 setFollowupDelayDays(settings.followupDelayDays);
                 setTelegramChatId(settings.telegramChatId ?? '');
@@ -40,11 +181,6 @@ function SettingsContent() {
             })
             .catch(() => router.push('/login'));
     }, [router, searchParams]);
-
-    async function connectGmail() {
-        const { url } = await apiFetch<{ url: string }>('/email-accounts/gmail/connect');
-        window.location.href = url;
-    }
 
     async function handleSave(e: FormEvent) {
         e.preventDefault();
@@ -66,17 +202,34 @@ function SettingsContent() {
             {message && <p className="mt-2 text-green-600">{message}</p>}
 
             <section className="mt-6 rounded-lg bg-white p-6 shadow">
-                <h2 className="mb-4 text-lg font-semibold">Comptes email</h2>
-                {accounts.length === 0 ? <p className="mb-4 text-slate-600">Aucun compte connecté</p> : (
-                    <ul className="mb-4 space-y-2">
-                        {accounts.map((a) => (
-                            <li key={a.id} className="text-sm">{a.provider} — {a.email}</li>
-                        ))}
-                    </ul>
-                )}
-                <button onClick={connectGmail} className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700">
-                    Connecter Gmail
-                </button>
+                <h2 className="mb-2 text-lg font-semibold">Comptes email</h2>
+                <p className="mb-4 text-sm text-slate-600">
+                    Connectez Gmail ou Outlook via OAuth (recommandé) ou via IMAP avec un mot de passe d&apos;application.
+                </p>
+                <div className="space-y-4">
+                    <EmailProviderSection
+                        provider="gmail"
+                        label="Gmail"
+                        oauthLabel="Connecter via Google"
+                        imapHint="Utilisez un mot de passe d'application Google (pas votre mot de passe principal)."
+                        accounts={accounts}
+                        onConnected={async (msg) => {
+                            setMessage(msg);
+                            await loadAccounts();
+                        }}
+                    />
+                    <EmailProviderSection
+                        provider="outlook"
+                        label="Outlook"
+                        oauthLabel="Connecter via Microsoft"
+                        imapHint="Utilisez un mot de passe d'application Microsoft si l'authentification à deux facteurs est activée."
+                        accounts={accounts}
+                        onConnected={async (msg) => {
+                            setMessage(msg);
+                            await loadAccounts();
+                        }}
+                    />
+                </div>
             </section>
 
             <form onSubmit={handleSave} className="mt-6 space-y-4 rounded-lg bg-white p-6 shadow">
