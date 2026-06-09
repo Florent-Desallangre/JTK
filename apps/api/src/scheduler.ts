@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 import { container } from './container';
+import { processEvents } from './event-processor';
 
 export function startScheduler(): void {
     cron.schedule('*/5 * * * *', async () => {
@@ -9,5 +10,10 @@ export function startScheduler(): void {
         for (const account of accounts) {
             await container.emailPipelineService.processAccount(account);
         }
+    });
+
+    cron.schedule('* * * * *', async () => {
+        const count = await processEvents();
+        if (count > 0) console.log(`[scheduler] processed ${count} events`);
     });
 }

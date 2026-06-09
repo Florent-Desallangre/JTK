@@ -9,9 +9,10 @@ import {
 } from '@jtk/applications';
 import { ClassificationService, OllamaClient, RulesEngine, getOllamaConfig } from '@jtk/classification';
 import { ParsingService } from '@jtk/parsing';
-import { EmailPipelineService } from '@jtk/email-sync';
+import { EmailPipelineService, EmailPersistenceService, EmailRepository, GmailSyncService } from '@jtk/email-sync';
 import { EmailAccountRepository, GmailProvider, getGmailConfig } from '@jtk/email-providers';
-import { EmailPersistenceService, EmailRepository, GmailSyncService } from '@jtk/email-sync';
+import { EventBusService, EventRepository } from '@jtk/events';
+import { NotificationHandler, TelegramService, getTelegramConfig } from '@jtk/notifications';
 
 const prismaService = new PrismaService();
 const authRepository = new AuthRepository(prismaService.db);
@@ -19,6 +20,10 @@ const applicationRepository = new ApplicationRepository(prismaService.db);
 const gmailProvider = new GmailProvider(getGmailConfig());
 const emailRepository = new EmailRepository(prismaService.db);
 const gmailSyncService = new GmailSyncService(gmailProvider);
+const eventRepository = new EventRepository(prismaService.db);
+const eventBus = new EventBusService(eventRepository);
+const classificationService = new ClassificationService(new RulesEngine(), new OllamaClient(getOllamaConfig()));
+const applicationStateService = new ApplicationStateService(prismaService.db);
 
 export const container = {
     prisma: prismaService.db,
@@ -33,15 +38,18 @@ export const container = {
     emailPersistenceService: new EmailPersistenceService(gmailSyncService, emailRepository, prismaService.db),
     parsingService: new ParsingService(),
     applicationMatcher: new ApplicationMatcherService(prismaService.db),
-    applicationStateService: new ApplicationStateService(prismaService.db),
+    applicationStateService,
     timelineService: new TimelineService(prismaService.db),
-    classificationService: new ClassificationService(new RulesEngine(), new OllamaClient(getOllamaConfig())),
+    classificationService,
+    eventBus,
+    notificationHandler: new NotificationHandler(new TelegramService(getTelegramConfig()), prismaService.db),
     emailPipelineService: new EmailPipelineService(
         new EmailPersistenceService(gmailSyncService, emailRepository, prismaService.db),
         emailRepository,
         new ParsingService(),
         new ApplicationMatcherService(prismaService.db),
-        new ClassificationService(new RulesEngine(), new OllamaClient(getOllamaConfig())),
-        new ApplicationStateService(prismaService.db),
+        classificationService,
+        applicationStateService,
+        eventBus,
     ),
 };

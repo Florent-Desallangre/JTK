@@ -24,7 +24,9 @@
       "@jtk/email-providers": ["./libs/email-providers/src/index.ts"],
       "@jtk/email-sync": ["./libs/email-sync/src/index.ts"],
       "@jtk/parsing": ["./libs/parsing/src/index.ts"],
-      "@jtk/classification": ["./libs/classification/src/index.ts"]
+      "@jtk/classification": ["./libs/classification/src/index.ts"],
+      "@jtk/notifications": ["./libs/notifications/src/index.ts"],
+      "@jtk/followup": ["./libs/followup/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
