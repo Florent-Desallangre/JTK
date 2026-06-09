@@ -1,3 +1,4 @@
+import { encryptToken } from '@jtk/shared-types';
 import { FollowupService } from './followup.service';
 import { FollowupRepository } from './followup.repository';
 
@@ -23,6 +24,20 @@ describe('FollowupService', () => {
 
         const due = await service.findDueApplications();
         expect(due).toHaveLength(1);
+    });
+
+    it('auto-sends when followup mode is automatic', async () => {
+        (mockPrisma.userSettings.findMany as jest.Mock).mockResolvedValue([{ userId: 'u1', followupDelayDays: 7 }]);
+        (mockPrisma.application.findMany as jest.Mock).mockResolvedValue([{ id: 'a1', title: 'Dev', company: 'Acme' }]);
+        (mockPrisma.event.findFirst as jest.Mock).mockResolvedValue(null);
+        (mockPrisma.userSettings.findUnique as jest.Mock).mockResolvedValue({ followupMode: 'automatic' });
+        (mockOllama.generateFollowupEmail as jest.Mock).mockResolvedValue({ subject: 'Relance', body: 'Bonjour' });
+        (mockRepo.createSuggestion as jest.Mock).mockResolvedValue({ id: 'f1', subject: 'Relance', body: 'Bonjour' });
+        (mockPrisma.emailAccount.findFirst as jest.Mock).mockResolvedValue({ accessToken: encryptToken('token') });
+        (mockRepo.findPendingByUser as jest.Mock).mockResolvedValue([{ id: 'f1', subject: 'Relance', body: 'Bonjour' }]);
+
+        await service.checkAndSchedule();
+        expect(mockGmail.sendEmail).toHaveBeenCalled();
     });
 
     it('generates followup suggestion via ollama', async () => {
