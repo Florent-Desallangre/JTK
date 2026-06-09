@@ -46,6 +46,20 @@ describe('ClassificationService', () => {
 });
 
 describe('OllamaClient', () => {
+    it('generates followup email json', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({
+                response: '{"subject":"Relance","body":"Bonjour, je relance ma candidature."}',
+            }),
+        }) as never;
+
+        const { OllamaClient } = await import('./ollama.client');
+        const client = new OllamaClient({ baseUrl: 'http://localhost:11434', model: 'mistral' });
+        const result = await client.generateFollowupEmail({ title: 'Dev', company: 'Acme' });
+        expect(result.subject).toBe('Relance');
+    });
+
     it('parses json from response', async () => {
         global.fetch = jest.fn().mockResolvedValue({
             ok: true,
