@@ -4,7 +4,7 @@ describe('ApplicationMatcherService', () => {
     const mockPrisma = {
         application: { create: jest.fn(), findFirst: jest.fn() },
         email: { findFirst: jest.fn(), update: jest.fn() },
-    } as never;
+    } as unknown as import('@prisma/client').PrismaClient;
 
     const service = new ApplicationMatcherService(mockPrisma);
 

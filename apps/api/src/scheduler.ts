@@ -7,7 +7,7 @@ export function startScheduler(): void {
         const accounts = await container.emailAccountRepository.findAllGmailAccounts();
         if (accounts.length === 0) return;
         for (const account of accounts) {
-            await container.emailPersistenceService.syncAndPersist(account);
+            await container.emailPipelineService.processAccount(account);
         }
     });
 }

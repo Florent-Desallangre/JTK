@@ -1,6 +1,8 @@
 import { PrismaService } from '@jtk/database';
 import { AuthRepository, AuthService, getAuthConfig } from '@jtk/auth';
-import { ApplicationRepository, ApplicationService } from '@jtk/applications';
+import { ApplicationMatcherService, ApplicationRepository, ApplicationService } from '@jtk/applications';
+import { ParsingService } from '@jtk/parsing';
+import { EmailPipelineService } from '@jtk/email-sync';
 import { EmailAccountRepository, GmailProvider, getGmailConfig } from '@jtk/email-providers';
 import { EmailPersistenceService, EmailRepository, GmailSyncService } from '@jtk/email-sync';
 
@@ -22,4 +24,12 @@ export const container = {
     gmailSyncService,
     emailRepository,
     emailPersistenceService: new EmailPersistenceService(gmailSyncService, emailRepository, prismaService.db),
+    parsingService: new ParsingService(),
+    applicationMatcher: new ApplicationMatcherService(prismaService.db),
+    emailPipelineService: new EmailPipelineService(
+        new EmailPersistenceService(gmailSyncService, emailRepository, prismaService.db),
+        emailRepository,
+        new ParsingService(),
+        new ApplicationMatcherService(prismaService.db),
+    ),
 };
