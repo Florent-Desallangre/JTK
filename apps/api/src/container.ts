@@ -1,6 +1,13 @@
 import { PrismaService } from '@jtk/database';
 import { AuthRepository, AuthService, getAuthConfig } from '@jtk/auth';
-import { ApplicationMatcherService, ApplicationRepository, ApplicationService } from '@jtk/applications';
+import {
+    ApplicationMatcherService,
+    ApplicationRepository,
+    ApplicationService,
+    ApplicationStateService,
+    TimelineService,
+} from '@jtk/applications';
+import { ClassificationService, OllamaClient, RulesEngine, getOllamaConfig } from '@jtk/classification';
 import { ParsingService } from '@jtk/parsing';
 import { EmailPipelineService } from '@jtk/email-sync';
 import { EmailAccountRepository, GmailProvider, getGmailConfig } from '@jtk/email-providers';
@@ -26,10 +33,15 @@ export const container = {
     emailPersistenceService: new EmailPersistenceService(gmailSyncService, emailRepository, prismaService.db),
     parsingService: new ParsingService(),
     applicationMatcher: new ApplicationMatcherService(prismaService.db),
+    applicationStateService: new ApplicationStateService(prismaService.db),
+    timelineService: new TimelineService(prismaService.db),
+    classificationService: new ClassificationService(new RulesEngine(), new OllamaClient(getOllamaConfig())),
     emailPipelineService: new EmailPipelineService(
         new EmailPersistenceService(gmailSyncService, emailRepository, prismaService.db),
         emailRepository,
         new ParsingService(),
         new ApplicationMatcherService(prismaService.db),
+        new ClassificationService(new RulesEngine(), new OllamaClient(getOllamaConfig())),
+        new ApplicationStateService(prismaService.db),
     ),
 };

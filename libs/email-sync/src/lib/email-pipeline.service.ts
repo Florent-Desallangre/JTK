@@ -1,5 +1,6 @@
 import { EmailAccount } from '@prisma/client';
-import { ApplicationMatcherService } from '@jtk/applications';
+import { ApplicationMatcherService, ApplicationStateService } from '@jtk/applications';
+import { ClassificationService } from '@jtk/classification';
 import { ParsingService } from '@jtk/parsing';
 import { EmailPersistenceService } from './email-persistence.service';
 import { EmailRepository } from './email.repository';
@@ -10,6 +11,8 @@ export class EmailPipelineService {
         private readonly emailRepository: EmailRepository,
         private readonly parsingService: ParsingService,
         private readonly applicationMatcher: ApplicationMatcherService,
+        private readonly classificationService: ClassificationService,
+        private readonly applicationStateService: ApplicationStateService,
     ) {}
 
     async processAccount(account: EmailAccount): Promise<void> {
@@ -31,7 +34,20 @@ export class EmailPipelineService {
 
             await this.emailRepository.updateParsedData(email.id, parsed);
 
-            await this.applicationMatcher.matchOrCreate(account.userId, email, parsed);
+            const match = await this.applicationMatcher.matchOrCreate(account.userId, email, parsed);
+            if (!match) continue;
+
+            const classification = await this.classificationService.classify(email.subject, parsed.cleanBody);
+            await this.emailRepository.updateParsedData(email.id, { ...parsed, classification });
+
+            if (match.application.id) {
+                await this.applicationStateService.updateFromClassification(
+                    match.application.id,
+                    email.id,
+                    classification,
+                    email.receivedAt,
+                );
+            }
         }
     }
 }
