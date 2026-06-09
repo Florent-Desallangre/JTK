@@ -23,15 +23,40 @@ describe('RulesEngine', () => {
 });
 
 describe('ClassificationService', () => {
-    const service = new ClassificationService(new RulesEngine());
+    const ollamaClient = { classify: jest.fn() } as unknown as import('./ollama.client').OllamaClient;
+    const service = new ClassificationService(new RulesEngine(), ollamaClient);
 
     it('uses rules for high confidence emails', async () => {
         const result = await service.classify('Refus', 'unfortunately we will not move forward');
         expect(result.type).toBe('negative');
+        expect(ollamaClient.classify).not.toHaveBeenCalled();
     });
 
-    it('returns unknown for ambiguous emails', async () => {
+    it('falls back to ollama for ambiguous emails', async () => {
+        (ollamaClient.classify as jest.Mock).mockResolvedValue({
+            type: 'neutral',
+            confidence: 0.5,
+            summary: 'test',
+            next_action: 'none',
+        });
         const result = await service.classify('Hello', 'Just checking in');
-        expect(result.type).toBe('unknown');
+        expect(result.type).toBe('neutral');
+        expect(ollamaClient.classify).toHaveBeenCalled();
+    });
+});
+
+describe('OllamaClient', () => {
+    it('parses json from response', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({
+                response: '{"type":"neutral","confidence":0.5,"summary":"test","next_action":"none"}',
+            }),
+        }) as never;
+
+        const { OllamaClient } = await import('./ollama.client');
+        const client = new OllamaClient({ baseUrl: 'http://localhost:11434', model: 'mistral' });
+        const result = await client.classify('Test', 'Body');
+        expect(result.type).toBe('neutral');
     });
 });
