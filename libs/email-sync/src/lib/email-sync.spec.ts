@@ -1,3 +1,4 @@
+import { encryptToken } from '@jtk/shared-types';
 import { GmailSyncService } from './gmail-sync.service';
 import { GmailProvider } from '@jtk/email-providers';
 
@@ -17,8 +18,8 @@ describe('GmailSyncService', () => {
 
         const result = await service.syncAccount({
             id: 'acc-1',
-            accessToken: 'token',
-            refreshToken: 'refresh',
+            accessToken: encryptToken('token'),
+            refreshToken: encryptToken('refresh'),
             tokenExpiry: new Date(Date.now() + 3600_000),
             syncCursor: null,
         } as never);
@@ -29,7 +30,9 @@ describe('GmailSyncService', () => {
 
     it('syncs all accounts', async () => {
         (mockProvider.listMessages as jest.Mock).mockResolvedValue({ messages: [], nextCursor: undefined });
-        const results = await service.syncAllAccounts([{ id: 'a1', accessToken: 't', refreshToken: 'r', tokenExpiry: new Date(Date.now() + 3600_000) } as never]);
+        const results = await service.syncAllAccounts([
+            { id: 'a1', accessToken: encryptToken('t'), refreshToken: encryptToken('r'), tokenExpiry: new Date(Date.now() + 3600_000) } as never,
+        ]);
         expect(results).toHaveLength(1);
     });
 });

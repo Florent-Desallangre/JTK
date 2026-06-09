@@ -1,5 +1,6 @@
 import { EmailAccount } from '@prisma/client';
 import { GmailProvider, RawEmailMessage } from '@jtk/email-providers';
+import { decryptToken } from '@jtk/shared-types';
 
 export interface SyncResult {
     accountId: string;
@@ -11,10 +12,10 @@ export class GmailSyncService {
     constructor(private readonly gmailProvider: GmailProvider) {}
 
     async syncAccount(account: EmailAccount): Promise<SyncResult> {
-        let accessToken = account.accessToken;
+        let accessToken = decryptToken(account.accessToken);
 
         if (account.tokenExpiry && account.tokenExpiry < new Date()) {
-            const refreshed = await this.gmailProvider.refreshAccessToken(account.refreshToken);
+            const refreshed = await this.gmailProvider.refreshAccessToken(decryptToken(account.refreshToken));
             accessToken = refreshed.accessToken;
         }
 

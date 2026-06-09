@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { decryptToken } from '@jtk/shared-types';
 import { OllamaClient } from '@jtk/classification';
 import { EventBusService } from '@jtk/events';
 import { GmailProvider } from '@jtk/email-providers';
@@ -88,7 +89,7 @@ export class FollowupService {
         const account = await this.prisma.emailAccount.findFirst({ where: { userId, provider: 'gmail' } });
         if (!account) throw new Error('NO_EMAIL_ACCOUNT');
 
-        await this.gmailProvider.sendEmail(account.accessToken, {
+        await this.gmailProvider.sendEmail(decryptToken(account.accessToken), {
             to: '',
             subject: suggestion.subject,
             body: suggestion.body,

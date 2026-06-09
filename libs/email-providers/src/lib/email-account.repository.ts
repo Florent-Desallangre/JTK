@@ -1,4 +1,5 @@
 import { EmailAccount, EmailProvider, PrismaClient } from '@prisma/client';
+import { decryptToken, encryptToken } from '@jtk/shared-types';
 
 export class EmailAccountRepository {
     constructor(private readonly prisma: PrismaClient) {}
@@ -16,8 +17,19 @@ export class EmailAccountRepository {
     ): Promise<EmailAccount> {
         return this.prisma.emailAccount.upsert({
             where: { userId_provider_email: { userId, provider: EmailProvider.gmail, email } },
-            create: { userId, provider: EmailProvider.gmail, email, accessToken, refreshToken, tokenExpiry },
-            update: { accessToken, refreshToken, tokenExpiry },
+            create: {
+                userId,
+                provider: EmailProvider.gmail,
+                email,
+                accessToken: encryptToken(accessToken),
+                refreshToken: encryptToken(refreshToken),
+                tokenExpiry,
+            },
+            update: {
+                accessToken: encryptToken(accessToken),
+                refreshToken: encryptToken(refreshToken),
+                tokenExpiry,
+            },
         });
     }
 

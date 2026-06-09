@@ -29,6 +29,14 @@ libs/
   events/        # Event bus interne
 ```
 
+## Tests
+
+```bash
+pnpm test
+```
+
 ## Repository
 
 `git@github.com:Florent-Desallangre/JTK.git`
+
+Voir [DEPLOY.md](./DEPLOY.md) pour le déploiement production.
