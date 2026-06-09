@@ -12,4 +12,8 @@ describe('GmailProvider', () => {
         expect(url).toContain('client_id=test-client');
         expect(url).toContain('state=user-123');
     });
+
+    it('exposes sendEmail method', () => {
+        expect(typeof provider.sendEmail).toBe('function');
+    });
 });
