@@ -13,6 +13,7 @@ import {
     deleteApplication,
     listApplications,
 } from '../../lib/applications';
+import { FollowupSuggestion, approveFollowup, listFollowupSuggestions } from '../../lib/followups';
 
 const ALL_STATUSES: ApplicationStatus[] = ['applied', 'interview', 'offer', 'rejected', 'archived'];
 
@@ -27,12 +28,18 @@ export default function DashboardPage() {
     const [title, setTitle] = useState('');
     const [company, setCompany] = useState('');
     const [userEmail, setUserEmail] = useState('');
+    const [followups, setFollowups] = useState<FollowupSuggestion[]>([]);
 
     const load = useCallback(async () => {
         try {
-            const [apps, user] = await Promise.all([listApplications(), getMe()]);
+            const [apps, user, suggestions] = await Promise.all([
+                listApplications(),
+                getMe(),
+                listFollowupSuggestions().catch(() => []),
+            ]);
             setApplications(apps);
             setUserEmail(user.email);
+            setFollowups(suggestions);
         } catch {
             router.push('/login');
         } finally {
@@ -157,6 +164,27 @@ export default function DashboardPage() {
                             </button>
                         </div>
                     </form>
+                )}
+
+                {followups.length > 0 && (
+                    <section className="mb-6 rounded-lg bg-amber-50 p-4 shadow">
+                        <h2 className="mb-3 font-semibold text-amber-900">Relances en attente</h2>
+                        {followups.map((f) => (
+                            <div key={f.id} className="mb-3 rounded bg-white p-4">
+                                <p className="font-medium">{f.subject}</p>
+                                <pre className="mt-2 whitespace-pre-wrap text-sm text-slate-600">{f.body}</pre>
+                                <button
+                                    onClick={async () => {
+                                        await approveFollowup(f.id);
+                                        setFollowups((prev) => prev.filter((x) => x.id !== f.id));
+                                    }}
+                                    className="mt-2 rounded bg-green-600 px-3 py-1 text-sm text-white"
+                                >
+                                    Approuver et envoyer
+                                </button>
+                            </div>
+                        ))}
+                    </section>
                 )}
 
                 <div className="overflow-hidden rounded-lg bg-white shadow">
